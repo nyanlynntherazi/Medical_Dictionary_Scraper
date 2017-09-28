@@ -23,7 +23,6 @@ for url in links[0]:
 
     df.to_sql(name='data',con=sql_con ,if_exists='append')
     for _ in range(0,2): #to control the crawl rate
-        print('')
         sleep(randint(1,2))
 
 
