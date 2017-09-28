@@ -1,24 +1,31 @@
-# This is a template for a Python scraper on morph.io (https://morph.io)
-# including some code snippets below that you should find helpful
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import os
+from time import sleep
+from random import randint
+import sqlite3 as sql
 
-# import scraperwiki
-# import lxml.html
-#
-# # Read in a page
-# html = scraperwiki.scrape("http://foo.com")
-#
-# # Find something on the page using css selectors
-# root = lxml.html.fromstring(html)
-# root.cssselect("div[align='left']")
-#
-# # Write out to the sqlite database using scraperwiki library
-# scraperwiki.sqlite.save(unique_keys=['name'], data={"name": "susan", "occupation": "software developer"})
-#
-# # An arbitrary query against the database
-# scraperwiki.sql.select("* from data where 'name'='peter'")
+links = pd.read_csv('alllink_med_dict.csv', header=None)
 
-# You don't have to do things with the ScraperWiki and lxml libraries.
-# You can use whatever libraries you want: https://morph.io/documentation/python
-# All that matters is that your final data is written to an SQLite database
-# called "data.sqlite" in the current working directory which has at least a table
-# called "data".
+for url in links[0]:
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "lxml")
+    header = soup.find('h2',text=True).text
+    content = soup.find('div',attrs={'class':'dd'}).text
+    records=[]
+    records.append((header, content))
+
+    df = pd.DataFrame(records, columns=['vocab', 'meaning'])
+    df = df.astype(str)
+    
+    sql_con = sql.connect("data.sqlite")
+
+    df.to_sql(name='data',con=sql_con ,if_exists='append')
+    for _ in range(0,2): #to control the crawl rate
+        print('')
+        sleep(randint(1,2))
+
+
+
+
